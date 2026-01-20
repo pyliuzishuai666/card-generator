@@ -747,11 +747,6 @@
             <div class="panel-section">
                 <div class="section-title">Settings</div>
                 <div class="settings-row">
-                    <span class="setting-label">字数限制</span>
-                    <input type="number" id="charLimit" class="setting-input" value="200" min="50" max="500">
-                    <span class="setting-unit">字/卡</span>
-                </div>
-                <div class="settings-row">
                     <span class="setting-label">字体大小</span>
                     <input type="number" id="fontSize" class="setting-input" value="18" min="12" max="32">
                     <span class="setting-unit">px</span>
@@ -849,45 +844,8 @@
             });
         }
 
-        function splitText(text, charLimit) {
-            // 将文本按字符分割，确保连续性
-            const result = [];
-            let remaining = text.trim();
-
-            while (remaining.length > 0) {
-                if (remaining.length <= charLimit) {
-                    result.push(remaining);
-                    break;
-                }
-
-                // 在字符限制内找到最后一个合适的断点
-                let splitIndex = charLimit;
-
-                // 优先在标点符号处断开
-                const punctuations = ['。', '！', '？', '；', '，', '.', '!', '?', ';', ',', '\n'];
-                let bestBreak = -1;
-
-                for (let i = Math.min(charLimit, remaining.length) - 1; i >= charLimit * 0.6; i--) {
-                    if (punctuations.includes(remaining[i])) {
-                        bestBreak = i + 1;
-                        break;
-                    }
-                }
-
-                if (bestBreak > 0) {
-                    splitIndex = bestBreak;
-                }
-
-                result.push(remaining.substring(0, splitIndex).trim());
-                remaining = remaining.substring(splitIndex).trim();
-            }
-
-            return result.length > 0 ? result : [''];
-        }
-
         function generateCards() {
             const text = document.getElementById('textInput').value.trim();
-            const charLimit = parseInt(document.getElementById('charLimit').value) || 200;
             const fontSize = document.getElementById('fontSize').value;
 
             if (!text) {
@@ -895,7 +853,7 @@
                 return;
             }
 
-            const cards = splitText(text, charLimit);
+            const cards = [text];
             const container = document.getElementById('cardsContainer');
             const downloadAllContainer = document.getElementById('downloadAllContainer');
             const cardsCount = document.getElementById('cardsCount');
@@ -914,7 +872,6 @@
                 const contentHtml = cardText.replace(/\n/g, '<br>');
 
                 card.innerHTML = `
-                    <div class="card-number">${index + 1}/${cards.length}</div>
                     <div class="card-content" style="font-family: ${fontFamilies[currentFont]}; font-size: ${fontSize}px;">${contentHtml}</div>
                     <div class="card-footer">Design by Qishuai</div>
                 `;
