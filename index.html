@@ -388,7 +388,7 @@
             padding: 36px 28px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             position: relative;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
@@ -411,6 +411,8 @@
             line-height: 1.75;
             word-wrap: break-word;
             overflow-wrap: break-word;
+            margin-top: 20px;
+            text-align: left;
         }
 
         .card-footer {
@@ -910,7 +912,7 @@
                 card.innerHTML = `
                     <div class="card-number">${index + 1}/${cards.length}</div>
                     <div class="card-content" style="font-family: ${fontFamilies[currentFont]}; font-size: ${fontSize}px;">${contentHtml}</div>
-                    <div class="card-footer">made by qishuai</div>
+                    <div class="card-footer">Design by qishuai</div>
                 `;
 
                 const downloadBtn = document.createElement('button');
