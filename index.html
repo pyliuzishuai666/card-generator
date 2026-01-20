@@ -385,12 +385,14 @@
         .card {
             width: 100%;
             max-width: 320px;
-            padding: 36px 28px;
+            padding: 24px 28px 40px 28px;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
+            align-items: flex-start;
             position: relative;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
         }
 
         .card:hover {
@@ -398,12 +400,11 @@
         }
 
         .card-number {
-            position: absolute;
-            top: 16px;
-            right: 20px;
-            font-size: 13px;
+            font-size: 12px;
             opacity: 0.5;
             font-weight: 500;
+            margin-bottom: 12px;
+            align-self: flex-end;
         }
 
         .card-content {
@@ -411,8 +412,10 @@
             line-height: 1.75;
             word-wrap: break-word;
             overflow-wrap: break-word;
-            margin-top: 20px;
             text-align: left;
+            flex: 1;
+            width: 100%;
+            overflow: hidden;
         }
 
         .card-footer {
@@ -780,12 +783,13 @@
             </div>
 
             <div id="downloadAllContainer" class="download-all-container" style="display: none;">
-                <button class="download-all-btn" onclick="downloadAllCards()">下载全部卡片</button>
+                <button class="download-all-btn" onclick="downloadAllCards()">打包下载全部 (ZIP)</button>
             </div>
         </section>
     </main>
 
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script>
         let currentStyle = 'minimal';
         let currentRatio = '3-4';
@@ -912,7 +916,7 @@
                 card.innerHTML = `
                     <div class="card-number">${index + 1}/${cards.length}</div>
                     <div class="card-content" style="font-family: ${fontFamilies[currentFont]}; font-size: ${fontSize}px;">${contentHtml}</div>
-                    <div class="card-footer">Design by qishuai</div>
+                    <div class="card-footer">Design by Qishuai</div>
                 `;
 
                 const downloadBtn = document.createElement('button');
@@ -957,10 +961,45 @@
 
         async function downloadAllCards() {
             const cards = document.querySelectorAll('.card');
+            const zip = new JSZip();
+            const btn = document.querySelector('.download-all-btn');
+            const originalText = btn.textContent;
 
-            for (let i = 0; i < cards.length; i++) {
-                await downloadCard(i);
-                await new Promise(resolve => setTimeout(resolve, 500));
+            btn.textContent = '打包中...';
+            btn.disabled = true;
+
+            try {
+                for (let i = 0; i < cards.length; i++) {
+                    btn.textContent = `打包中 ${i + 1}/${cards.length}`;
+                    const card = document.getElementById(`card-${i}`);
+                    if (!card) continue;
+
+                    const canvas = await html2canvas(card, {
+                        scale: 4,
+                        useCORS: true,
+                        backgroundColor: null,
+                        logging: false,
+                        allowTaint: true,
+                        imageTimeout: 0
+                    });
+
+                    const dataUrl = canvas.toDataURL('image/png', 1.0);
+                    const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
+                    zip.file(`card-${i + 1}.png`, base64Data, { base64: true });
+                }
+
+                const content = await zip.generateAsync({ type: 'blob' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = 'cards.zip';
+                link.click();
+                URL.revokeObjectURL(link.href);
+            } catch (error) {
+                console.error('打包失败:', error);
+                alert('打包失败，请重试');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
             }
         }
 
