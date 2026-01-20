@@ -844,6 +844,81 @@
             });
         }
 
+        // 根据卡片实际容量自动分割文字
+        function splitTextByCardCapacity(text, fontSize) {
+            const cards = [];
+
+            // 创建测量用的隐藏卡片
+            const measureCard = document.createElement('div');
+            measureCard.className = `card style-${currentStyle} ratio-${currentRatio}`;
+            measureCard.style.cssText = 'position: absolute; visibility: hidden; width: 320px;';
+
+            const measureNumber = document.createElement('div');
+            measureNumber.className = 'card-number';
+            measureNumber.textContent = '1/1';
+
+            const measureContent = document.createElement('div');
+            measureContent.className = 'card-content';
+            measureContent.style.fontFamily = fontFamilies[currentFont];
+            measureContent.style.fontSize = fontSize + 'px';
+
+            measureCard.appendChild(measureNumber);
+            measureCard.appendChild(measureContent);
+            document.body.appendChild(measureCard);
+
+            // 获取卡片内容区域的最大高度
+            const cardHeight = measureCard.offsetHeight;
+            const maxContentHeight = cardHeight - 100; // 减去 padding 和 footer 空间
+
+            // 按段落分割
+            const paragraphs = text.split(/\n+/);
+            let currentCardText = '';
+
+            for (let i = 0; i < paragraphs.length; i++) {
+                const paragraph = paragraphs[i].trim();
+                if (!paragraph) continue;
+
+                const testText = currentCardText ? currentCardText + '\n\n' + paragraph : paragraph;
+                measureContent.innerHTML = testText.replace(/\n/g, '<br>');
+
+                if (measureContent.scrollHeight > maxContentHeight && currentCardText) {
+                    // 当前段落加入后超出，保存当前卡片
+                    cards.push(currentCardText);
+                    currentCardText = paragraph;
+
+                    // 检查单个段落是否也超出
+                    measureContent.innerHTML = paragraph.replace(/\n/g, '<br>');
+                    if (measureContent.scrollHeight > maxContentHeight) {
+                        // 段落太长，按句子分割
+                        const sentences = paragraph.match(/[^。！？.!?]+[。！？.!?]?/g) || [paragraph];
+                        currentCardText = '';
+
+                        for (const sentence of sentences) {
+                            const testSentence = currentCardText ? currentCardText + sentence : sentence;
+                            measureContent.innerHTML = testSentence.replace(/\n/g, '<br>');
+
+                            if (measureContent.scrollHeight > maxContentHeight && currentCardText) {
+                                cards.push(currentCardText);
+                                currentCardText = sentence;
+                            } else {
+                                currentCardText = testSentence;
+                            }
+                        }
+                    }
+                } else {
+                    currentCardText = testText;
+                }
+            }
+
+            if (currentCardText) {
+                cards.push(currentCardText);
+            }
+
+            document.body.removeChild(measureCard);
+
+            return cards.length > 0 ? cards : [text];
+        }
+
         function generateCards() {
             const text = document.getElementById('textInput').value.trim();
             const fontSize = document.getElementById('fontSize').value;
@@ -853,7 +928,7 @@
                 return;
             }
 
-            const cards = [text];
+            const cards = splitTextByCardCapacity(text, fontSize);
             const container = document.getElementById('cardsContainer');
             const downloadAllContainer = document.getElementById('downloadAllContainer');
             const cardsCount = document.getElementById('cardsCount');
@@ -872,6 +947,7 @@
                 const contentHtml = cardText.replace(/\n/g, '<br>');
 
                 card.innerHTML = `
+                    <div class="card-number">${index + 1}/${cards.length}</div>
                     <div class="card-content" style="font-family: ${fontFamilies[currentFont]}; font-size: ${fontSize}px;">${contentHtml}</div>
                     <div class="card-footer">Design by Qishuai</div>
                 `;
