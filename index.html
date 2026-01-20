@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>卡片生成器 - Card Generator</title>
+    <!-- 开源中文字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;500;700&family=ZCOOL+XiaoWei&family=ZCOOL+QingKe+HuangYou&family=Ma+Shan+Zheng&family=Long+Cang&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -182,6 +186,41 @@
         .preview-paper { background: #faf8f5; color: #5c4b37; }
         .preview-neon { background: #0a0a0a; color: #ff00ff; border: 1px solid #ff00ff; }
 
+        /* Font Selector */
+        .font-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .font-option {
+            padding: 10px 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-size: 14px;
+            background: #fafafa;
+        }
+
+        .font-option:hover {
+            background: #f0f0f0;
+        }
+
+        .font-option.active {
+            border-color: #007AFF;
+            background: rgba(0, 122, 255, 0.1);
+            color: #007AFF;
+        }
+
+        .font-noto-sans { font-family: 'Noto Sans SC', sans-serif; }
+        .font-noto-serif { font-family: 'Noto Serif SC', serif; }
+        .font-zcool-xiaowei { font-family: 'ZCOOL XiaoWei', serif; }
+        .font-zcool-qingke { font-family: 'ZCOOL QingKe HuangYou', sans-serif; }
+        .font-ma-shan-zheng { font-family: 'Ma Shan Zheng', cursive; }
+        .font-long-cang { font-family: 'Long Cang', cursive; }
+
         /* Ratio Selector */
         .ratio-options {
             display: flex;
@@ -225,31 +264,42 @@
         .ratio-4-3 .ratio-icon { width: 32px; height: 24px; }
         .ratio-1-1 .ratio-icon { width: 28px; height: 28px; }
 
-        /* Char Limit */
-        .char-limit-row {
+        /* Settings Row */
+        .settings-row {
             display: flex;
             align-items: center;
             gap: 12px;
+            margin-bottom: 12px;
         }
 
-        .char-input {
-            width: 80px;
-            padding: 10px 12px;
+        .settings-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-label {
+            font-size: 14px;
+            color: #1d1d1f;
+            min-width: 70px;
+        }
+
+        .setting-input {
+            width: 70px;
+            padding: 8px 10px;
             border: 1px solid #d2d2d7;
-            border-radius: 10px;
-            font-size: 15px;
+            border-radius: 8px;
+            font-size: 14px;
             text-align: center;
             font-family: inherit;
         }
 
-        .char-input:focus {
+        .setting-input:focus {
             outline: none;
             border-color: #007AFF;
         }
 
-        .char-label {
-            font-size: 15px;
-            color: #1d1d1f;
+        .setting-unit {
+            font-size: 13px;
+            color: #86868b;
         }
 
         /* Buttons */
@@ -393,7 +443,6 @@
             color: #00ff88;
             border-radius: 8px;
             border: 1px solid rgba(0,255,136,0.3);
-            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
             box-shadow: 0 4px 24px rgba(0,255,136,0.15);
         }
 
@@ -419,7 +468,6 @@
             background: linear-gradient(135deg, #0a192f 0%, #112240 100%);
             color: #64ffda;
             border-radius: 8px;
-            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
             box-shadow: 0 4px 24px rgba(100,255,218,0.1);
         }
 
@@ -449,7 +497,6 @@
             color: #5c4b37;
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 8px 24px rgba(0,0,0,0.08);
-            font-family: 'Georgia', 'Times New Roman', serif;
         }
 
         .style-neon {
@@ -559,11 +606,19 @@
             .style-grid {
                 grid-template-columns: repeat(5, 1fr);
             }
+
+            .font-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         @media (max-width: 768px) {
             .style-grid {
                 grid-template-columns: repeat(3, 1fr);
+            }
+
+            .font-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .cards-grid {
@@ -609,7 +664,7 @@
         <aside class="control-panel">
             <div class="panel-section">
                 <div class="section-title">Content</div>
-                <textarea id="textInput" placeholder="Enter your text here. Long text will be automatically split into multiple cards..."></textarea>
+                <textarea id="textInput" placeholder="输入文字内容，长文本会自动分割成多张卡片..."></textarea>
             </div>
 
             <div class="panel-section">
@@ -617,40 +672,52 @@
                 <div class="style-grid">
                     <div class="style-option active" data-style="minimal">
                         <div class="style-preview preview-minimal">Aa</div>
-                        <div class="style-name">Minimal</div>
+                        <div class="style-name">简约白</div>
                     </div>
                     <div class="style-option" data-style="minimal-dark">
                         <div class="style-preview preview-minimal-dark">Aa</div>
-                        <div class="style-name">Dark</div>
+                        <div class="style-name">简约黑</div>
                     </div>
                     <div class="style-option" data-style="tech">
                         <div class="style-preview preview-tech">01</div>
-                        <div class="style-name">Tech</div>
+                        <div class="style-name">科技绿</div>
                     </div>
                     <div class="style-option" data-style="tech-blue">
                         <div class="style-preview preview-tech-blue">01</div>
-                        <div class="style-name">Cyber</div>
+                        <div class="style-name">科技蓝</div>
                     </div>
                     <div class="style-option" data-style="gradient">
                         <div class="style-preview preview-gradient">Aa</div>
-                        <div class="style-name">Purple</div>
+                        <div class="style-name">渐变紫</div>
                     </div>
                     <div class="style-option" data-style="gradient-warm">
                         <div class="style-preview preview-gradient-warm">Aa</div>
-                        <div class="style-name">Pink</div>
+                        <div class="style-name">渐变粉</div>
                     </div>
                     <div class="style-option" data-style="sunset">
                         <div class="style-preview preview-sunset">Aa</div>
-                        <div class="style-name">Sunset</div>
+                        <div class="style-name">日落</div>
                     </div>
                     <div class="style-option" data-style="paper">
                         <div class="style-preview preview-paper">Aa</div>
-                        <div class="style-name">Paper</div>
+                        <div class="style-name">纸质</div>
                     </div>
                     <div class="style-option" data-style="neon">
                         <div class="style-preview preview-neon">Aa</div>
-                        <div class="style-name">Neon</div>
+                        <div class="style-name">霓虹</div>
                     </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">Font</div>
+                <div class="font-grid">
+                    <div class="font-option font-noto-sans active" data-font="noto-sans">思源黑体</div>
+                    <div class="font-option font-noto-serif" data-font="noto-serif">思源宋体</div>
+                    <div class="font-option font-zcool-xiaowei" data-font="zcool-xiaowei">站酷小薇</div>
+                    <div class="font-option font-zcool-qingke" data-font="zcool-qingke">站酷庆科</div>
+                    <div class="font-option font-ma-shan-zheng" data-font="ma-shan-zheng">马善政楷</div>
+                    <div class="font-option font-long-cang" data-font="long-cang">龙藏体</div>
                 </div>
             </div>
 
@@ -673,16 +740,22 @@
             </div>
 
             <div class="panel-section">
-                <div class="section-title">Characters per Card</div>
-                <div class="char-limit-row">
-                    <input type="number" id="charLimit" class="char-input" value="200" min="50" max="500">
-                    <span class="char-label">characters max</span>
+                <div class="section-title">Settings</div>
+                <div class="settings-row">
+                    <span class="setting-label">字数限制</span>
+                    <input type="number" id="charLimit" class="setting-input" value="200" min="50" max="500">
+                    <span class="setting-unit">字/卡</span>
+                </div>
+                <div class="settings-row">
+                    <span class="setting-label">字体大小</span>
+                    <input type="number" id="fontSize" class="setting-input" value="18" min="12" max="32">
+                    <span class="setting-unit">px</span>
                 </div>
             </div>
 
             <div class="panel-section" style="background: transparent; box-shadow: none; padding: 0;">
-                <button class="btn-primary" onclick="generateCards()">Generate Cards</button>
-                <button class="btn-secondary" onclick="clearAll()">Clear All</button>
+                <button class="btn-primary" onclick="generateCards()">生成卡片</button>
+                <button class="btn-secondary" onclick="clearAll()">清空</button>
             </div>
         </aside>
 
@@ -699,13 +772,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                         </svg>
                     </div>
-                    <h3>No cards yet</h3>
-                    <p>Enter your text and click Generate to create beautiful cards</p>
+                    <h3>暂无卡片</h3>
+                    <p>输入文字并点击「生成卡片」开始创作</p>
                 </div>
             </div>
 
             <div id="downloadAllContainer" class="download-all-container" style="display: none;">
-                <button class="download-all-btn" onclick="downloadAllCards()">Download All Cards</button>
+                <button class="download-all-btn" onclick="downloadAllCards()">下载全部卡片</button>
             </div>
         </section>
     </main>
@@ -714,6 +787,16 @@
     <script>
         let currentStyle = 'minimal';
         let currentRatio = '3-4';
+        let currentFont = 'noto-sans';
+
+        const fontFamilies = {
+            'noto-sans': "'Noto Sans SC', sans-serif",
+            'noto-serif': "'Noto Serif SC', serif",
+            'zcool-xiaowei': "'ZCOOL XiaoWei', serif",
+            'zcool-qingke': "'ZCOOL QingKe HuangYou', sans-serif",
+            'ma-shan-zheng': "'Ma Shan Zheng', cursive",
+            'long-cang': "'Long Cang', cursive"
+        };
 
         // Style selector
         document.querySelectorAll('.style-option').forEach(option => {
@@ -721,6 +804,16 @@
                 document.querySelectorAll('.style-option').forEach(o => o.classList.remove('active'));
                 option.classList.add('active');
                 currentStyle = option.dataset.style;
+                updateExistingCards();
+            });
+        });
+
+        // Font selector
+        document.querySelectorAll('.font-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.font-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                currentFont = option.dataset.font;
                 updateExistingCards();
             });
         });
@@ -735,68 +828,64 @@
             });
         });
 
+        // Font size change
+        document.getElementById('fontSize').addEventListener('change', updateExistingCards);
+
         function updateExistingCards() {
+            const fontSize = document.getElementById('fontSize').value;
             document.querySelectorAll('.card').forEach(card => {
                 card.className = `card style-${currentStyle} ratio-${currentRatio}`;
+                const content = card.querySelector('.card-content');
+                if (content) {
+                    content.style.fontFamily = fontFamilies[currentFont];
+                    content.style.fontSize = fontSize + 'px';
+                }
             });
         }
 
         function splitText(text, charLimit) {
-            const paragraphs = text.split(/\n+/).filter(p => p.trim());
-            const cards = [];
-            let currentCard = '';
+            // 将文本按字符分割，确保连续性
+            const result = [];
+            let remaining = text.trim();
 
-            for (const paragraph of paragraphs) {
-                if (currentCard.length + paragraph.length + 1 <= charLimit) {
-                    currentCard += (currentCard ? '\n\n' : '') + paragraph;
-                } else {
-                    if (currentCard) {
-                        cards.push(currentCard);
-                    }
+            while (remaining.length > 0) {
+                if (remaining.length <= charLimit) {
+                    result.push(remaining);
+                    break;
+                }
 
-                    if (paragraph.length <= charLimit) {
-                        currentCard = paragraph;
-                    } else {
-                        const sentences = paragraph.match(/[^。！？.!?]+[。！？.!?]?/g) || [paragraph];
-                        currentCard = '';
+                // 在字符限制内找到最后一个合适的断点
+                let splitIndex = charLimit;
 
-                        for (const sentence of sentences) {
-                            if (currentCard.length + sentence.length <= charLimit) {
-                                currentCard += sentence;
-                            } else {
-                                if (currentCard) {
-                                    cards.push(currentCard);
-                                }
+                // 优先在标点符号处断开
+                const punctuations = ['。', '！', '？', '；', '，', '.', '!', '?', ';', ',', '\n'];
+                let bestBreak = -1;
 
-                                if (sentence.length <= charLimit) {
-                                    currentCard = sentence;
-                                } else {
-                                    let remaining = sentence;
-                                    while (remaining.length > charLimit) {
-                                        cards.push(remaining.substring(0, charLimit));
-                                        remaining = remaining.substring(charLimit);
-                                    }
-                                    currentCard = remaining;
-                                }
-                            }
-                        }
+                for (let i = Math.min(charLimit, remaining.length) - 1; i >= charLimit * 0.6; i--) {
+                    if (punctuations.includes(remaining[i])) {
+                        bestBreak = i + 1;
+                        break;
                     }
                 }
+
+                if (bestBreak > 0) {
+                    splitIndex = bestBreak;
+                }
+
+                result.push(remaining.substring(0, splitIndex).trim());
+                remaining = remaining.substring(splitIndex).trim();
             }
 
-            if (currentCard) {
-                cards.push(currentCard);
-            }
-
-            return cards.length > 0 ? cards : [''];
+            return result.length > 0 ? result : [''];
         }
 
         function generateCards() {
             const text = document.getElementById('textInput').value.trim();
             const charLimit = parseInt(document.getElementById('charLimit').value) || 200;
+            const fontSize = document.getElementById('fontSize').value;
 
             if (!text) {
-                alert('Please enter some text');
+                alert('请输入文字内容');
                 return;
             }
 
@@ -816,15 +905,17 @@
                 card.className = `card style-${currentStyle} ratio-${currentRatio}`;
                 card.id = `card-${index}`;
 
+                const contentHtml = cardText.replace(/\n/g, '<br>');
+
                 card.innerHTML = `
                     <div class="card-number">${index + 1}/${cards.length}</div>
-                    <div class="card-content">${cardText.replace(/\n/g, '<br>')}</div>
-                    <div class="card-footer">Card Generator</div>
+                    <div class="card-content" style="font-family: ${fontFamilies[currentFont]}; font-size: ${fontSize}px;">${contentHtml}</div>
+                    <div class="card-footer">made by qishuai</div>
                 `;
 
                 const downloadBtn = document.createElement('button');
                 downloadBtn.className = 'download-btn';
-                downloadBtn.textContent = 'Download';
+                downloadBtn.textContent = '下载';
                 downloadBtn.onclick = () => downloadCard(index);
 
                 wrapper.appendChild(card);
@@ -832,7 +923,7 @@
                 grid.appendChild(wrapper);
             });
 
-            cardsCount.textContent = `${cards.length} card${cards.length > 1 ? 's' : ''}`;
+            cardsCount.textContent = `${cards.length} 张卡片`;
             cardsCount.style.display = 'inline-block';
             downloadAllContainer.style.display = cards.length > 1 ? 'block' : 'none';
         }
@@ -842,19 +933,23 @@
             if (!card) return;
 
             try {
+                // 高清导出设置
                 const canvas = await html2canvas(card, {
-                    scale: 2,
+                    scale: 4, // 4倍分辨率，确保高清
                     useCORS: true,
-                    backgroundColor: null
+                    backgroundColor: null,
+                    logging: false,
+                    allowTaint: true,
+                    imageTimeout: 0
                 });
 
                 const link = document.createElement('a');
                 link.download = `card-${index + 1}.png`;
-                link.href = canvas.toDataURL('image/png');
+                link.href = canvas.toDataURL('image/png', 1.0); // 最高质量
                 link.click();
             } catch (error) {
-                console.error('Download failed:', error);
-                alert('Download failed, please try again');
+                console.error('下载失败:', error);
+                alert('下载失败，请重试');
             }
         }
 
@@ -876,8 +971,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                         </svg>
                     </div>
-                    <h3>No cards yet</h3>
-                    <p>Enter your text and click Generate to create beautiful cards</p>
+                    <h3>暂无卡片</h3>
+                    <p>输入文字并点击「生成卡片」开始创作</p>
                 </div>
             `;
             document.getElementById('downloadAllContainer').style.display = 'none';
