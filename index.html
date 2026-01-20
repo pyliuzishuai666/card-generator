@@ -844,14 +844,14 @@
             });
         }
 
-        // 根据卡片实际容量自动分割文字
+        // 根据卡片实际容量自动分割文字，确保填满每张卡片
         function splitTextByCardCapacity(text, fontSize) {
             const cards = [];
 
             // 创建测量用的隐藏卡片
             const measureCard = document.createElement('div');
             measureCard.className = `card style-${currentStyle} ratio-${currentRatio}`;
-            measureCard.style.cssText = 'position: absolute; visibility: hidden; width: 320px;';
+            measureCard.style.cssText = 'position: absolute; visibility: hidden; width: 320px; pointer-events: none;';
 
             const measureNumber = document.createElement('div');
             measureNumber.className = 'card-number';
@@ -861,6 +861,7 @@
             measureContent.className = 'card-content';
             measureContent.style.fontFamily = fontFamilies[currentFont];
             measureContent.style.fontSize = fontSize + 'px';
+            measureContent.style.overflow = 'visible';
 
             measureCard.appendChild(measureNumber);
             measureCard.appendChild(measureContent);
@@ -868,50 +869,59 @@
 
             // 获取卡片内容区域的最大高度
             const cardHeight = measureCard.offsetHeight;
-            const maxContentHeight = cardHeight - 100; // 减去 padding 和 footer 空间
+            const maxContentHeight = cardHeight - 90; // padding + footer
 
-            // 按段落分割
-            const paragraphs = text.split(/\n+/);
-            let currentCardText = '';
+            let remaining = text;
 
-            for (let i = 0; i < paragraphs.length; i++) {
-                const paragraph = paragraphs[i].trim();
-                if (!paragraph) continue;
+            while (remaining.length > 0) {
+                // 二分查找找到最大能容纳的文字量
+                let low = 1;
+                let high = remaining.length;
+                let bestFit = remaining.length;
 
-                const testText = currentCardText ? currentCardText + '\n\n' + paragraph : paragraph;
-                measureContent.innerHTML = testText.replace(/\n/g, '<br>');
-
-                if (measureContent.scrollHeight > maxContentHeight && currentCardText) {
-                    // 当前段落加入后超出，保存当前卡片
-                    cards.push(currentCardText);
-                    currentCardText = paragraph;
-
-                    // 检查单个段落是否也超出
-                    measureContent.innerHTML = paragraph.replace(/\n/g, '<br>');
-                    if (measureContent.scrollHeight > maxContentHeight) {
-                        // 段落太长，按句子分割
-                        const sentences = paragraph.match(/[^。！？.!?]+[。！？.!?]?/g) || [paragraph];
-                        currentCardText = '';
-
-                        for (const sentence of sentences) {
-                            const testSentence = currentCardText ? currentCardText + sentence : sentence;
-                            measureContent.innerHTML = testSentence.replace(/\n/g, '<br>');
-
-                            if (measureContent.scrollHeight > maxContentHeight && currentCardText) {
-                                cards.push(currentCardText);
-                                currentCardText = sentence;
-                            } else {
-                                currentCardText = testSentence;
-                            }
-                        }
-                    }
-                } else {
-                    currentCardText = testText;
+                // 先检查全部文字是否能放下
+                measureContent.innerHTML = remaining.replace(/\n/g, '<br>');
+                if (measureContent.scrollHeight <= maxContentHeight) {
+                    cards.push(remaining.trim());
+                    break;
                 }
-            }
 
-            if (currentCardText) {
-                cards.push(currentCardText);
+                // 二分查找最佳分割点
+                while (low <= high) {
+                    const mid = Math.floor((low + high) / 2);
+                    const testText = remaining.substring(0, mid);
+                    measureContent.innerHTML = testText.replace(/\n/g, '<br>');
+
+                    if (measureContent.scrollHeight <= maxContentHeight) {
+                        bestFit = mid;
+                        low = mid + 1;
+                    } else {
+                        high = mid - 1;
+                    }
+                }
+
+                // 在 bestFit 位置附近找一个合适的断点（标点符号或空格）
+                let splitIndex = bestFit;
+                const punctuations = ['。', '！', '？', '；', '，', '.', '!', '?', ';', ',', ' ', '\n'];
+
+                // 往前找最近的标点符号作为断点
+                for (let i = bestFit; i >= Math.max(0, bestFit - 50); i--) {
+                    if (punctuations.includes(remaining[i])) {
+                        splitIndex = i + 1;
+                        break;
+                    }
+                }
+
+                // 如果找不到合适的断点，就用 bestFit
+                if (splitIndex <= 0) {
+                    splitIndex = bestFit;
+                }
+
+                const cardText = remaining.substring(0, splitIndex).trim();
+                if (cardText) {
+                    cards.push(cardText);
+                }
+                remaining = remaining.substring(splitIndex).trim();
             }
 
             document.body.removeChild(measureCard);
